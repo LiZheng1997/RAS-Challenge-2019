@@ -87,14 +87,14 @@ class kuka_iiwa_ros_client:
         #following functions.
 
         #The topic for analysing the natural language
-	    rospy.Subscriber("transcript_topic", String, self.transcript_topic_callback)
+        rospy.Subscriber("transcript_topic", String, self.transcript_topic_callback)
 
         #
-	    rospy.Subscriber("ObjectCoordinates", String, self.DetectionTopic_callback)
+        rospy.Subscriber("ObjectCoordinates", String, self.DetectionTopic_callback)
 
         #The topic for juding if the hand is opened, we need to be sure that we 
         #might have some faults when the state of the hand is not clear
-	    rospy.Subscriber("handOpened", Bool, self.handOpened_callback)
+        rospy.Subscriber("handOpened", Bool, self.handOpened_callback)
 
         #The topic for juding if the hand is opened, we need to be sure that we 
         #might have some faults when the state of the hand is not clear

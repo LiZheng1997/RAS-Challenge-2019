@@ -75,8 +75,8 @@ class kuka_iiwa_ros_client:
         rospy.Subscriber("isMastered", String, self.isMastered_callback)
         rospy.Subscriber("OperationMode", String, self.OperationMode_callback)
         rospy.Subscriber("isReadyToMove", String, self.isReadyToMove_callback)
-	    rospy.Subscriber("moveit_iiwa", String, self.moveit_iiwa_callback)
-
+        rospy.Subscriber("moveit_iiwa", String, self.moveit_iiwa_callback)
+        
         #   Make Publishers for kuka_iiwa commands
         self.pub_kuka_command = rospy.Publisher('kuka_command', String, queue_size=10)
 
@@ -86,7 +86,7 @@ class kuka_iiwa_ros_client:
 
     #   ~M: __init__ ==========================
     def moveit_iiwa_callback(self, data):
-	self.send_command(data.data)
+	   self.send_command(data.data)
 
     def send_command(self, command_str):
         #rospy.loginfo(command_str)

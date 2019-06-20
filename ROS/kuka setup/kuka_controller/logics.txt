@@ -24,3 +24,5 @@
     7. move exact to the place we want to drop
     8. opend the gripper
     9. get back to the home position
+
+    

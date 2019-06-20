@@ -11,8 +11,9 @@ version = 'V15032017'
 # Dependencies: conf.txt, ROS server, Rospy, KUKA iiwa java SDK, KUKA iiwa robot.
 
 #######################################################################################################################
-import rospy, os
+import rospy, os, time, math
 from std_msgs.msg import String
+from std_msgs.msg import Bool
 
 
 def cl_black(msge): return '\033[30m'+msge+'\033[0m'
@@ -52,10 +53,15 @@ class kuka_iiwa_ros_client:
         self.isCollision  = (False, None)
         self.isMastered = (False, None)
         self.OperationMode = (None, None)
+	+++++++++++++++++++++++++++++self.Transcript = "very long and empty string"
+	self.ObjectCoor = " "
+	self.ObjectReached = False
+	self.handOpened = False
+	self.handClosed = False
 
         os.system('clear')
         print cl_pink('\n==========================================')
-        print cl_pink('<   <  < << SHEFFIELD ROBOTICS >> >  >   >')
+        print cl_pink('<   <  < << SHEFFIELD ROBOTICS gp>> >  >   >')
         print cl_pink('==========================================')
         print cl_pink(' KUKA API for ROS')
         print cl_pink(' Client Version: ' + version)
@@ -75,19 +81,55 @@ class kuka_iiwa_ros_client:
         rospy.Subscriber("isMastered", String, self.isMastered_callback)
         rospy.Subscriber("OperationMode", String, self.OperationMode_callback)
         rospy.Subscriber("isReadyToMove", String, self.isReadyToMove_callback)
-	    rospy.Subscriber("moveit_iiwa", String, self.moveit_iiwa_callback)
+        
+	    #rospy.Subscriber("isReadyToMove", String, self.isReadyToMove_callback)
+        #Here are topics that we want to add in our project. They will be used in the 
+        #following functions.
+
+        #The topic for analysing the natural language
+	    rospy.Subscriber("transcript_topic", String, self.transcript_topic_callback)
+
+        #
+	    rospy.Subscriber("ObjectCoordinates", String, self.DetectionTopic_callback)
+
+        #The topic for juding if the hand is opened, we need to be sure that we 
+        #might have some faults when the state of the hand is not clear
+	    rospy.Subscriber("handOpened", Bool, self.handOpened_callback)
+
+        #The topic for juding if the hand is opened, we need to be sure that we 
+        #might have some faults when the state of the hand is not clear
+	    rospy.Subscriber("handClosed", Bool, self.handClosed_callback)
 
         #   Make Publishers for kuka_iiwa commands
         self.pub_kuka_command = rospy.Publisher('kuka_command', String, queue_size=10)
+	    self.moved_to_object = rospy.Publisher('moved_to_object', Bool, queue_size=10)
 
         #   Make kuka_iiwa client
         rospy.init_node('kuka_iiwa_client', anonymous=False)
         self.rate = rospy.Rate(100) #    100hz update rate.
 
     #   ~M: __init__ ==========================
-    def moveit_iiwa_callback(self, data):
-	self.send_command(data.data)
 
+    def handOpened_callback(self, data):
+	self.handOpened = data.data
+
+    def handClosed_callback(self, data):
+	self.handClosed = data.data
+	
+    def DetectionTopic_callback(self, data):
+	d = str(data.data).split()    
+	self.ObjectCoor = d
+    
+    def Moved_to_object(self, ObjectReached):
+	self.moved_to_object.publish(ObjectReached)
+	
+    #This is the callback function we will use in the transcript_topic 
+    def transcript_topic_callback(self, data):
+	self.Transcript=data.data
+
+    def EmergencyStop(self):
+		self.send_command('forceStop')
+	
     def send_command(self, command_str):
         #rospy.loginfo(command_str)
         self.pub_kuka_command.publish(command_str)
@@ -99,7 +141,15 @@ class kuka_iiwa_ros_client:
         #rospy.loginfo(rospy.get_caller_id() + "Received JointPosition " + str(data.data) )
         # e.g. [0.0, 0.17, 0.0, 1.92, 0.0, 0.35, 0.0] 1459253274.1
         self.JointPosition = ([float(x) for x in data.data.split(']')[0][1:].split(', ')], float(data.data.split(']')[1]))
+        self.Joint1= math.radians(self.JointPosition[0][0])
+        self.Joint2= math.radians(self.JointPosition[0][1])
+        self.Joint3= math.radians(self.JointPosition[0][2])
+        self.Joint4= math.radians(self.JointPosition[0][3])
+        self.Joint5= math.radians(self.JointPosition[0][4])
+        self.Joint6= math.radians(self.JointPosition[0][5])
+        self.Joint7= math.radians(self.JointPosition[0][6])
 
+	
     def isCompliance_callback(self, data):
         #rospy.loginfo(rospy.get_caller_id() + "Received isCompliance " + str(data.data) )
         d = str(data.data).split() # e.g. off 1459253274.11
@@ -120,6 +170,7 @@ class kuka_iiwa_ros_client:
         if d[0] == 'True': stat = True
         if d[0] == 'False': stat = False
         self.isCollision = (stat, float(d[1]))
+	
 
     def isMastered_callback(self, data):
         # rospy.loginfo(rospy.get_caller_id() + "Received isMastered " + str(data.data) )
@@ -160,7 +211,7 @@ class kuka_iiwa_ros_client:
     def JointJerk_callback(self, data):
         # e.g. 1.0 1459253274.11
         self.JointJerk = ( float(data.data.split(' ')[0]), float(data.data.split(' ')[1]) )
-    
+	
     #   ~M: callbacks ===========================
 
 #   ~Class: Kuka iiwa ROS client    #####################

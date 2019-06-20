@@ -1,0 +1,26 @@
+
+
+
+1. we want to use the NLP algorithms to control the robot.
+    so we have to define our key words, and design the logic 
+    function about how to move the arm to a locaton and get the 
+    item to another place.
+
+    Task 1: 
+    Move the item to a default location 
+    Move the items to a default location
+
+    Move the item to a wanted location 
+    Move the items to a wanted location
+
+    How to move and pick:
+
+    1. Before start moving and picking, we should to check the state of the robot.
+    2. move close to the place we want or default place. (we know the location of the item)
+    3. check if the gripper is opened ror not.
+    4. move exact to the place 
+    5. close the gripper
+    6. move close to the place we want to drop
+    7. move exact to the place we want to drop
+    8. opend the gripper
+    9. get back to the home position
